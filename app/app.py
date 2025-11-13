@@ -6,6 +6,7 @@ import pandas as pd
 import streamlit as st
 import joblib
 
+# ====== 路径配置 ======
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 SRC_DIR = os.path.join(PROJECT_ROOT, "src")
@@ -18,6 +19,7 @@ from llm_agent import (
 )
 
 MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "buy_model.pkl")
+SAMPLE_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "crm_test_data.csv")
 
 
 @st.cache_resource
@@ -29,7 +31,7 @@ def load_model():
 
 
 def main():
-    st.set_page_config(page_title="CRM 决策支持系统 - Yannick", layout="wide")
+    st.set_page_config(page_title="CRM 决策支持系统", layout="wide")
     st.title("📊 CRM 决策支持系统 - Yannick")
     st.markdown(
         "该系统基于历史数据训练的模型，为客户成交概率预测提供支持，并生成跟进建议。"
@@ -60,15 +62,36 @@ def main():
     else:
         st.session_state["api_key"] = default_key
 
-    # ============= 数据上传 & 预测 =============
-    st.sidebar.header("数据与预测")
-    uploaded_file = st.sidebar.file_uploader("上传客户特征数据（CSV）", type=["csv"])
+    # ============= 数据来源选择 =============
+    st.sidebar.header("📂 数据与预测")
 
-    if uploaded_file is None:
-        st.info("请在左侧上传待预测的客户数据（至少包含 customer_id 以及若干特征列）。")
-        return
+    data_source = st.sidebar.radio(
+        "选择数据来源",
+        ("使用示例数据集（data/crm_test_data.csv）", "上传自定义CSV"),
+    )
 
-    df = pd.read_csv(uploaded_file)
+    df = None
+
+    if data_source.startswith("使用示例数据集"):
+        # 使用仓库内自带的示例数据
+        if not os.path.exists(SAMPLE_DATA_PATH):
+            st.error(
+                "示例数据集 data/crm_test_data.csv 不存在，请在项目根目录下创建 data 文件夹并放入该 CSV 后重新部署。"
+            )
+            return
+
+        df = pd.read_csv(SAMPLE_DATA_PATH)
+        st.sidebar.success("已加载示例数据集：data/crm_test_data.csv")
+    else:
+        # 用户自定义上传
+        uploaded_file = st.sidebar.file_uploader("上传客户特征数据（CSV）", type=["csv"])
+        if uploaded_file is None:
+            st.info("请在左侧上传待预测的客户数据，或选择“使用示例数据集”。")
+            return
+        df = pd.read_csv(uploaded_file)
+        st.sidebar.success("已加载自定义数据集。")
+
+    # 到这里 df 一定已经有值
     if "customer_id" not in df.columns:
         st.error("数据中必须包含 'customer_id' 列。")
         return
@@ -76,9 +99,11 @@ def main():
     feature_cols = [c for c in df.columns if c != "customer_id"]
     X = df[feature_cols]
 
+    # ====== 预测结果缓存 ======
     if "pred_df" not in st.session_state:
         st.session_state["pred_df"] = None
 
+    # ====== 点击按钮运行预测 ======
     if st.sidebar.button("运行预测"):
         with st.spinner("正在运行模型预测..."):
             proba = model.predict_proba(X)[:, 1]
@@ -146,6 +171,12 @@ def main():
 
             st.markdown("### 🧠 建议文本")
             st.write(advice)
+
+        st.markdown("---")
+        st.markdown(
+            "💡 如需体验 DeepSeek 大模型建议，请在左侧输入你的 API Key；"
+            "若不填写，系统将自动使用模板版建议，保证作业可运行。"
+        )
 
 
 if __name__ == "__main__":
