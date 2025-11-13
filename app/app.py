@@ -29,7 +29,7 @@ def load_model():
 
 
 def main():
-    st.set_page_config(page_title="CRM 决策支持系统", layout="wide")
+    st.set_page_config(page_title="CRM 决策支持系统 - Yannick", layout="wide")
     st.title("📊 CRM 决策支持系统")
     st.markdown(
         "该系统基于历史数据训练的模型，为客户成交概率预测提供支持，并生成跟进建议。"
@@ -146,12 +146,6 @@ def main():
 
             st.markdown("### 🧠 建议文本")
             st.write(advice)
-
-        st.markdown("---")
-        st.markdown(
-            "💡 如需体验 DeepSeek 大模型建议，请在左侧输入你的 API Key；"
-            "若不填写，系统将自动使用模板版建议，保证作业可运行。"
-        )
 
 
 if __name__ == "__main__":
