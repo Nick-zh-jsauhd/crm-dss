@@ -1,0 +1,6 @@
+streamlit
+pandas
+numpy
+scikit-learn
+joblib
+openai>=1.0.0
