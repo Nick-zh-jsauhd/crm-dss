@@ -67,7 +67,7 @@ def main():
 
     data_source = st.sidebar.radio(
         "选择数据来源",
-        ("使用示例数据集（data/crm_test_data.csv）", "上传自定义CSV"),
+        ("使用示例数据集", "上传自定义CSV"),
     )
 
     df = None
@@ -81,7 +81,7 @@ def main():
             return
 
         df = pd.read_csv(SAMPLE_DATA_PATH)
-        st.sidebar.success("已加载示例数据集：data/crm_test_data.csv")
+        st.sidebar.success("已加载示例数据集")
     else:
         # 用户自定义上传
         uploaded_file = st.sidebar.file_uploader("上传客户特征数据（CSV）", type=["csv"])
