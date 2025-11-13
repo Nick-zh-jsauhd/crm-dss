@@ -172,12 +172,6 @@ def main():
             st.markdown("### 🧠 建议文本")
             st.write(advice)
 
-        st.markdown("---")
-        st.markdown(
-            "💡 如需体验 DeepSeek 大模型建议，请在左侧输入你的 API Key；"
-            "若不填写，系统将自动使用模板版建议，保证作业可运行。"
-        )
-
 
 if __name__ == "__main__":
     main()
