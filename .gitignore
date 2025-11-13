@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Streamlit local secrets
+.streamlit/secrets.toml
+.streamlit/
+
+# MacOS / Windows temporary files
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# Model checkpoints or large data (可按需保留)
+*.model
+*.ckpt
+*.h5
+
+# Logs
+*.log
+
+# Cache
+.cache/
