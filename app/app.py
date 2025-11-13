@@ -30,7 +30,7 @@ def load_model():
 
 def main():
     st.set_page_config(page_title="CRM 决策支持系统 - Yannick", layout="wide")
-    st.title("📊 CRM 决策支持系统")
+    st.title("📊 CRM 决策支持系统 - Yannick")
     st.markdown(
         "该系统基于历史数据训练的模型，为客户成交概率预测提供支持，并生成跟进建议。"
     )
