@@ -12,6 +12,7 @@ PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 SRC_DIR = os.path.join(PROJECT_ROOT, "src")
 sys.path.append(SRC_DIR)
 
+from evaluate_model import evaluate_on_dataframe, load_labeled_data
 from rules import classify_customer
 from llm_agent import (
     generate_advice_template,
@@ -20,6 +21,7 @@ from llm_agent import (
 
 MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "buy_model.pkl")
 SAMPLE_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "crm_test_data.csv")
+TRAINING_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "crm_training_data.csv")
 
 
 @st.cache_resource
@@ -172,6 +174,72 @@ def main():
             st.markdown("### 🧠 建议文本")
             st.write(advice)
 
+    # ================= 模型准确性评估 =================
+    st.divider()
+    st.header("📈 模型准确性评估")
+    st.markdown(
+        "上传或选用带 `label` (0/1) 的数据集，计算准确率、召回率、F1、ROC AUC 等指标，"
+        "便于监控模型效果。"
+    )
+
+    eval_source = st.radio(
+        "选择评估数据来源",
+        ("使用本地训练集 (data/crm_training_data.csv)", "上传自定义带 label 的 CSV"),
+        key="eval_source",
+    )
+
+    eval_df = None
+    if eval_source.startswith("使用本地训练集"):
+        if os.path.exists(TRAINING_DATA_PATH):
+            try:
+                eval_df = load_labeled_data(TRAINING_DATA_PATH)
+                st.caption(f"已载入: {TRAINING_DATA_PATH}")
+            except Exception as e:
+                st.error(f"加载本地训练集失败：{e}")
+        else:
+            st.error("未找到 data/crm_training_data.csv，请先准备带 label 的评估数据。")
+    else:
+        eval_file = st.file_uploader("上传带 label 的 CSV (须包含 customer_id, label 列)", type=["csv"])
+        if eval_file is not None:
+            eval_df = pd.read_csv(eval_file)
+            missing = [c for c in ("customer_id", "label") if c not in eval_df.columns]
+            if missing:
+                st.error(f"缺少必需列: {', '.join(missing)}")
+                eval_df = None
+
+    if st.button("运行模型评估", key="run_eval"):
+        if eval_df is None:
+            st.warning("请先选择有效的评估数据。")
+        else:
+            with st.spinner("正在计算评估指标..."):
+                try:
+                    metrics = evaluate_on_dataframe(model, eval_df)
+                except Exception as e:
+                    st.error(f"评估失败：{e}")
+                else:
+                    col1, col2, col3, col4 = st.columns(4)
+                    col1.metric("准确率", f"{metrics['accuracy']:.2%}")
+                    col2.metric("精确率", f"{metrics['precision']:.2%}")
+                    col3.metric("召回率", f"{metrics['recall']:.2%}")
+                    auc_value = metrics.get("roc_auc")
+                    if auc_value is not None:
+                        col4.metric("ROC AUC", f"{auc_value:.3f}")
+                    else:
+                        col4.metric("ROC AUC", "N/A")
+
+                    st.metric("F1 分数", f"{metrics['f1']:.2%}")
+
+                    st.markdown("**混淆矩阵 (行=真实值, 列=预测值)**")
+                    cm = metrics["confusion_matrix"]
+                    cm_df = pd.DataFrame(
+                        cm,
+                        columns=["预测:负类(0)", "预测:正类(1)"],
+                        index=["真实:负类(0)", "真实:正类(1)"],
+                    )
+                    st.dataframe(cm_df)
+
+                    st.markdown("**分类报告**")
+                    st.text(metrics["classification_report"])
 
 if __name__ == "__main__":
     main()
