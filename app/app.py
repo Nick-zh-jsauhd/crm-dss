@@ -21,7 +21,7 @@ from llm_agent import (
 
 MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "buy_model.pkl")
 SAMPLE_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "crm_test_data.csv")
-TRAINING_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "crm_training_data.csv")
+TRAINING_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "crm_test_data_with_label.csv")
 
 
 @st.cache_resource
@@ -184,7 +184,7 @@ def main():
 
     eval_source = st.radio(
         "选择评估数据来源",
-        ("使用本地训练集 (data/crm_training_data.csv)", "上传自定义带 label 的 CSV"),
+        ("使用本地训练集 (data/crm_test_data_with_label.csv)", "上传自定义带 label 的 CSV"),
         key="eval_source",
     )
 
@@ -197,7 +197,7 @@ def main():
             except Exception as e:
                 st.error(f"加载本地训练集失败：{e}")
         else:
-            st.error("未找到 data/crm_training_data.csv，请先准备带 label 的评估数据。")
+            st.error("未找到 data/crm_test_data_with_label.csv，请先准备带 label 的评估数据。")
     else:
         eval_file = st.file_uploader("上传带 label 的 CSV (须包含 customer_id, label 列)", type=["csv"])
         if eval_file is not None:
